@@ -16,6 +16,7 @@
 
 > **Autional demo fork**：本仓库基于上游 NextChat fork，接入
 > [Autional](https://www.autional.cn) SSO 并改造为多用户（聊天记录与设置按账号隔离、持久化到平台存储）。
+> **在线 Demo**：<https://nextchat-demo-eight.vercel.app>（Autional SSO 登录）。
 > 接入与部署见 `AUTIONAL_SETUP.md`；改动清单见 `AUTIONAL_CHANGES.md`；问题日志见 `AI-ONBOARDING-NOTES.md`。
 
 ## Sponsor AI API

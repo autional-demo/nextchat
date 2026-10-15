@@ -40,6 +40,7 @@ English / [简体中文](./README_CN.md)
 > 本仓库基于 [ChatGPTNextWeb/NextChat](https://github.com/ChatGPTNextWeb/NextChat) fork 改造：接入
 > [Autional](https://www.autional.cn) 身份平台 SSO 登录，从单用户应用变为多用户产品。
 > 每个账号的聊天记录与设置**按用户隔离**，并**持久化到平台存储**（Vercel Blob private）。
+> **在线 Demo**：<https://nextchat-demo-eight.vercel.app>（Autional SSO 登录）。
 
 > **Deploy**：页首与「Get Started」的一键部署按钮，部署的是**上游** NextChat（无 SSO）；
 > 本 fork 需要 Autional 环境变量与预链接的 Vercel 项目 —— 见 `AUTIONAL_SETUP.md` →「Deploying to Vercel」

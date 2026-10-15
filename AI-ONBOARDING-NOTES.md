@@ -8,11 +8,11 @@
 | 阶段 | 状态 | 备注 |
 | --- | --- | --- |
 | fork + lab 骨架 | ✅ | fork `autional-demo/nextchat` + submodule `nextchat/`；上游基线 `839a24df` |
-| 租户 + 账号 + 客户端 | ✅ | 试用租户 `nextchat-demo` + 3 测试账号 + OAuth public client（脚本见 `provision/nextchat-*.mjs`） |
+| 租户 + 账号 + 客户端 | ✅ | 租户 `nextchat-demo`（2026-10-15 转永久）+ 3 测试账号 + OAuth public client（脚本见 `provision/nextchat-*.mjs`） |
 | 代码接入（skill Phase 5） | ✅ | SSO + 会话门（全 LLM 路由 + 平台存储路由）+ private Blob 状态快照 + 同源 `/bff` |
 | 本地测试 | ✅ | 全量 **39 套件 / 185 用例** PASS（含 autional 5 套件 / 28 用例）；隔离探针 **6/6**；live-auth 探针 **4/4** |
-| Vercel 部署 | ✅ | **https://nextchat-demo-eight.vercel.app**（生产 4 次部署，末版 `7wk9zgi4o`） |
-| 生产 E2E | ✅ | 5/5：SSO 登录 / 对话持久化（清本地 → blob 恢复）/ 换号隔离（bob 零 alice）/ 换号往返（alice 4 会话完好）/ 登出（修复后实点：干净落 `/login`，无僵尸） |
+| Vercel 部署 | ✅ | **https://nextchat-demo-eight.vercel.app**（生产 5 次部署，末版 `a5azbokt0`） |
+| 生产 E2E | ✅ | 6/6：SSO 登录 / 对话持久化（清本地 → blob 恢复）/ 换号隔离（bob 零 alice）/ 换号往返（alice 4 会话完好）/ 登出（修复后实点：干净落 `/login`，无僵尸）/ UI 轮（部署 5：登录卡 light+dark、推广卡无残留、标准端点登出成功） |
 
 ## 环境与基线
 
@@ -34,7 +34,7 @@
 
 | 项 | 值 |
 | --- | --- |
-| 租户 | `nextchat-demo`（.cn，**试用** plan=free，2026-10-15 注册；到期边界同 exp1/2 口径，转永久先例见实验 2） |
+| 租户 | `nextchat-demo`（.cn，plan=free，2026-10-15 注册试用 → **同日转永久**：`trial=false` + `trial_expires_at=NULL`，与 novel-demo 同态；转永久端点缺陷见 E5N） |
 | tenantId | `01M4YNQ323YT61WW2AA9SM9AJ3` |
 | appId（OAuth public client） | `client-TgTEqF0vse53`（注册名 `nextchat-local-mv8wvfmi`；PKCE；redirect / CORS / post_logout 均含 `http://localhost:3000` + 生产域） |
 | issuer | `https://api.autional.cn`（浏览器同源 `/bff` 反代；服务端绝对地址） |
@@ -82,6 +82,7 @@
 | E2N | 生产登出 → `auth.autional.tianv.mobi/logout-confirm` **404**（死域；OP 会话不终结） | 双层：① fork 无 hint（C4N，后修正为清除态假象）② 平台标准端点在无 hint 时 302 死域 | 两域 curl 对照（`auth.autional.cn` 200 / `tianv.mobi` 404；state UUID 透传）；平台会话实际终结无僵尸 | fork 绕行：无 hint 直达 `auth.autional.cn/logout-confirm`；单测补强 5/5；部署 `7wk9zgi4o`；实点验证干净落 `/login`。**2026-10-15 更新**：hint 存在 → 标准端点实测走通（OP 会话终止、干净落 `/login`），两分支均在位 |
 | E3N | 登出确认页裸 i18n key（`logoutConfirm.*`） | 平台 i18n 缺键 | 页面快照 | 平台 UI 缺陷留档 |
 | E4N | 平台 login 偶发 **502**（瞬时） | 平台波动 | 两次 `POST …/auth/login` 502 → 8s 重试 200 | 重试即恢复；留档（脚本 5xx 重试惯例覆盖） |
+| E5N | 「试用转正式」端点**静默空操作**：`POST …/admin/tenants/:id/upgrade` 返回 200 `upgraded`，DB 无转换 | handler 内 `tenant.ConvertFromTrial()` 只改内存副本；service `UpdateTenant` 重取全新实体（`tenant_service.go:442`）仅持久化请求字段 → 转换丢弃；该 handler 无测试覆盖（`http_handler_test.go` 零命中） | 实测两轮（探针 + 实跑）：200 + `updated_at` 变化，`trial`/`trial_expires_at` 原值不动；源码逐行对照 | 绕行：云库直写终态（`trial=false` + `trial_expires_at=NULL` + `status=active`，2026-10-15，与 novel-demo 同态）；缺陷留档待平台修复 |
 
 E 组附 · 部署事实（2026-10-15）：
 

@@ -4,7 +4,7 @@
 
 - Date: 2026-10-15
 - Framework: Next.js 14.1.1 → **14.2.35** (App Router) + React 18 · Zustand stores · yarn
-- Tenant: nextchat-demo (trial) — tenantId `01M4YNQ323YT61WW2AA9SM9AJ3`
+- Tenant: nextchat-demo (permanent since 2026-10-15 — trial=false, no expiry) — tenantId `01M4YNQ323YT61WW2AA9SM9AJ3`
 - Region: **.cn** (all planes: issuer/api `api.autional.cn`, auth `auth.autional.cn`)
 - Environment: local dev (`http://localhost:3000`) + Vercel production (`https://nextchat-demo-eight.vercel.app`)
 
