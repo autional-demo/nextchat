@@ -143,7 +143,7 @@ npx vercel deploy --prod --yes --archive=tgz
 | Vercel project     | `nextchat-demo` (`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`, team `team_DH5R480Z49vsc8ZrHBVHiYY3`)                                                                               |
 | Blob store         | `store_QnigCBrtCrLy22tz` (iad1, **private**; static-token connect mode injects `BLOB_READ_WRITE_TOKEN`)                                                                  |
 | Production URL     | **https://nextchat-demo-eight.vercel.app**                                                                                                                               |
-| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes, current) |
+| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes) → `o8d7gw9ai` (SUMMARIZE_MODEL fix, current) |
 | Deploy mode        | CLI direct upload (`--archive=tgz`); `.vercelignore` excludes `.env*`, `.data/`, `.next/`, `.swc/`                                                                       |
 
 ## Verification record (2026-10-15)
@@ -164,6 +164,11 @@ npx vercel deploy --prod --yes --archive=tgz
   (state PUTs 200) → logout via the standard endpoint (hint present) → clean `/login`, OP
   session terminated, autional cookies cleared. Mid-round the platform API plane had a ~6-min
   502 outage (nginx upstream; recovered; the consent title showed “未知应用” only during it).
+- Production E2E — auto-title round (deploy `o8d7gw9ai`): login (SSO silent re-approve) → new chat →
+  100+ char message → gpt-5 streaming reply 200 → **title call `gpt-5` (stream:false) 200 →
+  topic “杭州三日游”** + memory summarize `gpt-5` 200 (both previously failed silently on the
+  stock `gpt-4o-mini`; notes D6N) → PUT user-state 200 → hard reload past the 5-min token TTL →
+  one-shot SSO re-replay (known boundary, C5N) → title restored from the platform blob.
 
 ## Known boundaries
 
