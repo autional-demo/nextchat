@@ -53,7 +53,7 @@
 | C1N | SDK `createTrialTenant()` 直连 **404**（novel C1R **复发**） | `@autional/core` 请求路径缺 `/bff` + `tenant/` 段（novel 源码实证路径未变） | SDK 形态 404；真实端点对照 201 | 原始 fetch 直调真实端点 → **201**（`provision/nextchat-trial-register.mjs`） |
 | C2N | 管理面链核验：exp1 C5/C6（管理员密码传输 / RBAC 播种）**未复现** | 10-10 三仓修复已上 prod 生效 | `nextchat-admin-verify.mjs` T1-T3 PASS | 无处置（好消息，修复效果再证） |
 | C3N | `middleware.ts` 引 `@autional/next` 导致编译失败（novel C7 **同源**） | SDK dist 单文件 bundle 丢失 `"use client"` 标记，react-server 编译失败 | 本地 build 报错 | 本地等价实现（cookie 存在性门 `/` → `/login`）；token 真实性不在中件层信任（见 S1N）。**已修（2026-10-15 跟版）**：next 0.4.0 子路径粒化（`./middleware` 零 react 引用且保留 `"use client"`）→ `middleware.ts` 换回官方 `autionalMiddleware({protectedPaths:["/"], loginPath:"/login"})`（原 config matcher 保留）；既有 3 断言等价性单测 + C6N 探针全链双证 |
-| C4N | 登出 `id_token_hint` ~~永远不可得~~（**2026-10-15 修正**：活跃会话 hint 可得） | 原观察系**清除态**载荷；0.3.x 活跃会话实测持久化含真实 `idToken`(785) + `refreshToken`(35) | localStorage 转储（清除态 vs 活跃态对照）+ JWT 解码（id ttl=1800s） | hint 存在 → 标准端点登出（见 E2N 更新）；为 null 时走确认页分支 |
+| C4N | 登出 `id_token_hint` ~~永远不可得~~（**2026-10-15 修正**：活跃会话 hint 可得） | 原观察系**清除态**载荷；0.3.x 活跃会话实测持久化含真实 `idToken`(785) + `refreshToken`(35) | localStorage 转储（清除态 vs 活跃态对照）+ JWT 解码（id ttl=1800s） | hint 存在 → 标准端点登出（见 E2N 更新）；hint 不可得 → 标准端点由平台 302 确认页承接（fork 绕行分支已移除，2026-10-16） |
 | C5N | 会话闲置必失效（novel C12/C13 **同源复现**） | 刷新链缺分支 + seedStorage 覆写（同 novel 根因；refresh 401 良性、无 offline_access） | 现场观察：TTL 后请求 401；重载 → SSO 自动重放续登 | 应用侧缓解：`/login` 残留 cookie 自动重放（只试一次）+ PlatformSync 兜底；SDK 刷新链待平台修复。**已修（2026-10-15 跟版）**：core 0.3.5 `initialize()` 过期恢复 + next 0.4.0 播种降覆写；应用侧缓解已拆（自动重放 + 兜底跳转双双删除）。C6N 探针 **13/13**（本地真机：合成过期 → reload → 静默刷新 expIn≈296s、无弹跳、无 SSO 重放）；**生产复测（2026-10-15，fork `ffdbb049` 推送 → CLI 部署 `ffpvfbykx`）同探针 13/13** |
 | C6N | cookie 桥接 token 过期后**推送静默停摆**（页面开 10+ 分钟） | 复合 C5N：刷新不发生 → cookie 不同步 → `PUT /api/user-state` 401 → 客户端停推（无提示） | PUT 401 + console 时序 | 重载/自动重放恢复；记入 SETUP §Known boundaries。**已修（2026-10-15 跟版）**：同 C5N 链；探针 `provision/nextchat-c6n-refresh-e2e.mjs` **13/13**，含 reload 后 `/api/user-state` 200 实证（刷新后的会话被服务端门接受，与推送同一门）。桥本体**保留**（0.4.0 dist 实证 cookie 仍只读不写 → 属契约补位非兜底；判定见 novel NOTES C9「保留判定」） |
 
@@ -80,16 +80,16 @@
 | # | 现象 | 根因 | 证据 | 处置 |
 | - | ---- | ---- | ---- | ---- |
 | E1N | 本地登出后落 api 域 JSON（`{"code":0,"message":"logged_out"}`）而不回跳应用 | `post_logout_redirect_uris` 未注册（novel E9 谱系） | 响应体原文 | `nextchat-update-client.mjs` 注册 `http://localhost:3000/` → 一跳回 `/login` |
-| E2N | 生产登出 → `auth.autional.tianv.mobi/logout-confirm` **404**（死域；OP 会话不终结） | 双层：① fork 无 hint（C4N，后修正为清除态假象）② 平台标准端点在无 hint 时 302 死域 | 两域 curl 对照（`auth.autional.cn` 200 / `tianv.mobi` 404；state UUID 透传）；平台会话实际终结无僵尸 | fork 绕行：无 hint 直达 `auth.autional.cn/logout-confirm`；单测补强 5/5；部署 `7wk9zgi4o`；实点验证干净落 `/login`。**2026-10-15 更新**：hint 存在 → 标准端点实测走通（OP 会话终止、干净落 `/login`），两分支均在位 |
+| E2N | 生产登出 → `auth.autional.tianv.mobi/logout-confirm` **404**（死域；OP 会话不终结） | 双层：① fork 无 hint（C4N，后修正为清除态假象）② 平台标准端点在无 hint 时 302 死域 | 两域 curl 对照（`auth.autional.cn` 200 / `tianv.mobi` 404；state UUID 透传）；平台会话实际终结无僵尸 | fork 绕行：无 hint 直达 `auth.autional.cn/logout-confirm`；单测补强 5/5；部署 `7wk9zgi4o`；实点验证干净落 `/login`。**2026-10-15 更新**：hint 存在 → 标准端点实测走通（OP 会话终止、干净落 `/login`），两分支均在位。**2026-10-16 收官**：平台修复到位后绕行分支**已移除**（fork `a9109b6f`；登出恒走标准端点，`logout.ts`/`config.ts`/单测同步收敛，全量 40 套件/190 用例），部署 `q418pyrsn` 生产两径复测 **27/27**（hint 路径 / 清态 no-hint → 确认页路径：均干净落 `/login` + OP 会话终结 + 无死域回归；脚本 `provision/nextchat-logout-e2e.mjs`）。同轮实证：SDK `logout()` 自身亦整页跳标准端点（内存储 idToken 组 hint），与应用导航同页竞发、后者（应用）胜出——断言按「窗口内请求形态 + 最终落点」判定（见脚本头注记） |
 | E3N | 登出确认页裸 i18n key（`logoutConfirm.*`） | 平台 i18n 缺键 | 页面快照 | **已修复（2026-10-15 平台侧）**：auth 站 `972b4bc`（i18n 全量平铺化 + guard 运行时语义锁 + config 注释契约）；双区真机复测通过（auth.autional.cn 中文渲染「退出登录」等、EN 切换正常；auth.autional.com 英文默认） |
 | E4N | 平台 login 偶发 **502**（瞬时） | 平台波动 | 两次 `POST …/auth/login` 502 → 8s 重试 200 | 重试即恢复；留档（脚本 5xx 重试惯例覆盖） |
 | E5N | 「试用转正式」端点**静默空操作**：`POST …/admin/tenants/:id/upgrade` 返回 200 `upgraded`，DB 无转换 | handler 内 `tenant.ConvertFromTrial()` 只改内存副本；service `UpdateTenant` 重取全新实体（`tenant_service.go:442`）仅持久化请求字段 → 转换丢弃；该 handler 无测试覆盖（`http_handler_test.go` 零命中） | 实测两轮（探针 + 实跑）：200 + `updated_at` 变化，`trial`/`trial_expires_at` 原值不动（DB 侧）；源码逐行对照 | **已修复（2026-10-15 平台侧）**：转换下沉服务层 `ConvertTrialToPermanent`（持久化实体转换 + 全行落库 + `tenant.updated` 事件），handler 收敛为薄代理；service-tenant `@ c06ecf3`（CI check-all PASS → prod 部署 SUCCESS）。真机复测通过：新注册试用租户 `e5n-retest-mv95jmud` 升级 200 → **二次升级 400 `not a trial tenant`**（服务层 DB 重读判定 ⇒ 转换已落库；旧缺陷下二次升级仍 200）——判据脚本 `provision/e5n-retest-upgrade.mjs`（注：admin GET 为 TenantResponse 投影，不含 trial 字段，故用二次升级行为判别）。修复前绕行：云库直写终态（nextchat-demo，与 novel-demo 同态） |
 
-E 组附 · 部署事实（2026-10-15）：
+E 组附 · 部署事实（2026-10-15；2026-10-16 更新）：
 
 - Vercel 项目 `nextchat-demo`（`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`，team `team_DH5R480Z49vsc8ZrHBVHiYY3`）；CLI 直传（`--archive=tgz`；`.vercelignore` 排除 `.env*` / `.data/` / `.next/` / `.swc/`）。
 - Blob 存储 `store_QnigCBrtCrLy22tz`（iad1，**private**；静态 token 模式注入 `BLOB_READ_WRITE_TOKEN`）。
-- 生产部署 5 次：`a88qg4u8f`（首次）→ `12n2ywy20`（DEFAULT_MODEL 修复）→ `jy3ion23m`（推送竞态修复 D12N）→ `7wk9zgi4o`（登出修复 E2N）→ `a5azbokt0`（登录卡升级 + 推广卡移除 + README Deploy 注记，当前）。
+- 生产部署 9 次：`a88qg4u8f`（首次）→ `12n2ywy20`（DEFAULT_MODEL 修复）→ `jy3ion23m`（推送竞态修复 D12N）→ `7wk9zgi4o`（登出修复 E2N）→ `a5azbokt0`（登录卡升级 + 推广卡移除 + README Deploy 注记）→ `o8d7gw9ai`（SUMMARIZE_MODEL 修复 #27/D6N）→ `ffpvfbykx`（SDK 跟版 C6N）→ `4mrryqcdh`（R1 换号残留 + R5 CORS 修复）→ `q418pyrsn`（E2N 绕行移除 + 两径复测 27/27，当前）。
 
 ### S 组（安全专项）
 
@@ -116,10 +116,10 @@ E 组附 · 部署事实（2026-10-15）：
 - **平台存储是加载时的事实源**（D8N）：blob 里的 config 会经 pull 回灌浏览器。改默认模型等配置后，务必经 UI 走一次推送（或直接 PUT `/api/user-state`）让 blob 收敛；只改本地代码/IndexedDB 会被下次加载覆盖。
 - **会话续期**（C5N/C6N，**2026-10-15 跟版后已解**）：access token 约 5 分钟过期；过期后重载页面即静默刷新恢复（core 0.3.5 + next 0.4.0），推送链不再停摆（C6N 探针 13/13）。
 - **桌面删除无确认**（D11N）：会话列表桌面端删除图标点击即删（撤销 toast 过期不可恢复）；演示点击避开行尾图标；恢复靠平台 blob。
-- **测试**（D4N）：用 `node node_modules/jest/bin/jest.js --ci` 直调（`yarn test:ci` 在 git-bash 下 shim 失败）。
+- **测试**（D4N）：用 `node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --ci` 直调（缺 ESM flags 会在 `jest.setup.ts` 报 import 语法错；`yarn test:ci` 在 git-bash 下 shim 失败）。
 - **日志纪律**（D9N）：NextChat 构建/运行日志会明文打印中继 key——任何输出/文档过滤，绝不复述键值。
 - **网络**（W3N）：github.com / `*.vercel.app` 直连被墙；脚本走 v2rayN 代理、git 远端一律 SSH。
-- **登出绕行可移除**（E2N）：平台修复「标准端点在无 hint 时 302 死域」后，`logout.ts` 的绕行分支可删除（代码内注记同此）。
+- **登出绕行已移除**（E2N，2026-10-16）：平台修复「标准端点在无 hint 时 302 死域」并复测通过后，`logout.ts` 绕行分支已删除（fork `a9109b6f`，部署 `q418pyrsn`，两径复测 27/27）——登出恒走标准端点；hint 不可得时由平台 302 确认页承接。重测勿再为 no-hint 直连确认页写分支。
 
 ---
 

@@ -83,12 +83,11 @@
    **Access (API keys) and Sync (cloud creds) never leave the device**. Pushes serialize via an
    in-flight promise; the dirty flag is consumed before send and re-armed in `finally`.
 8. **Logout** (`app/autional/logout.ts`). flush → build logout URL → clear local stores →
-   SDK `logout()` → full-page navigation to the OP logout endpoint. With a hint, the standard
-   endpoint is used (a fresh credentials login persists a real idToken — verified in the
-   2026-10-15 production E2E: the OP session terminated, landing back on a clean `/login`).
-   With no hint, the standard endpoint 302s to a dead host (`auth.autional.tianv.mobi`, 404),
-   so we navigate directly to `auth.autional.cn/logout-confirm` instead (notes C4N/E2N;
-   removable when the platform fixes the no-hint fallback).
+   SDK `logout()` → full-page navigation to the OP logout endpoint. Always the **standard
+   endpoint**: with a hint the OP session terminates directly and lands back on a clean
+   `/login`; with no hint the platform 302s to `auth.autional.cn/logout-confirm` (platform
+   fix 2026-10-15 — the earlier fork-side bypass to the confirm page was removed on
+   2026-10-16; both paths re-verified in production on deploy `q418pyrsn`, notes C4N/E2N).
 9. **Default model seed.** Server `DEFAULT_MODEL` flows in via `useAccessStore.fetch()`; the fix
    additionally syncs the live (rehydrated) config store and seeds `gpt-5` in
    `app/store/config.ts` (notes D7N/D8N — the relay catalog has no `gpt-4o-mini`).
@@ -143,7 +142,7 @@ npx vercel deploy --prod --yes --archive=tgz
 | Vercel project     | `nextchat-demo` (`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`, team `team_DH5R480Z49vsc8ZrHBVHiYY3`)                                                                               |
 | Blob store         | `store_QnigCBrtCrLy22tz` (iad1, **private**; static-token connect mode injects `BLOB_READ_WRITE_TOKEN`)                                                                  |
 | Production URL     | **https://nextchat-demo-eight.vercel.app**                                                                                                                               |
-| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes) → `o8d7gw9ai` (SUMMARIZE_MODEL fix) → `ffpvfbykx` (SDK bump, fork `ffdbb049`, current) |
+| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes) → `o8d7gw9ai` (SUMMARIZE_MODEL fix) → `ffpvfbykx` (SDK bump, fork `ffdbb049`) → `4mrryqcdh` (account-switch residue + CORS fix, fork `603fe4e2`) → `q418pyrsn` (logout bypass removal, fork `a9109b6f`, current) |
 | Deploy mode        | CLI direct upload (`--archive=tgz`); `.vercelignore` excludes `.env*`, `.data/`, `.next/`, `.swc/`                                                                       |
 
 ## Verification record (2026-10-15)
@@ -176,6 +175,14 @@ npx vercel deploy --prod --yes --archive=tgz
   replay / `/api/user-state` 200 (refreshed session accepted by the server gate — same gate as
   pushes). Supersedes the former "hard reload past the 5-min TTL → one-shot SSO re-replay"
   boundary: workaround chain removed app-side, fixed in core 0.3.5 / next 0.4.0.
+- Production E2E — logout-bypass-removal round (deploy `q418pyrsn`, fork `a9109b6f`): both
+  logout paths re-verified, **27/27** (`provision/nextchat-logout-e2e.mjs`). Path 1 (valid
+  hint): standard endpoint → 302 back → clean `/login`, OP session terminated (form
+  re-appears). Path 2 (cleared local state, no hint): standard endpoint → 302 to
+  `auth.autional.cn/logout-confirm` (no dead-host regression) → confirm → XHR revoke 200 →
+  clean `/login`, OP session terminated. The SDK's own end-session navigation fires alongside
+  and is superseded by the app navigation — assertion is request-shape-in-window + final
+  landing (see E2E script header). Jest full suite **40 suites / 190 tests PASS**.
 
 ## Known boundaries
 
