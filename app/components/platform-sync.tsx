@@ -15,6 +15,12 @@ import { useAppConfig, useChatStore } from "../store";
 import { useMaskStore } from "../store/mask";
 import { usePromptStore } from "../store/prompt";
 import { registerBeforeLogout } from "@/app/autional/logout";
+import {
+  clearLocalUserData,
+  getLastUserId,
+  resolveUserSwitch,
+  setLastUserId,
+} from "@/app/autional/user-switch";
 
 const SYNC_KEYS = [
   StoreKey.Chat,
@@ -64,9 +70,19 @@ function subscribeSynced(key: SyncedKey, listener: () => void): () => void {
 }
 
 export function PlatformSync() {
-  const { isAuthenticated, isLoading } = useAutional();
+  const { isAuthenticated, isLoading, user } = useAutional();
 
   useEffect(() => {
+    // 换号守卫：本机残留属上一账号时先清理再整页重载（重载后判定为 same，
+    // 走正常 pull）。否则残留会经 mergeAppState 并入新账号视图并上推其 blob。
+    if (!isLoading && isAuthenticated && user?.id) {
+      if (resolveUserSwitch(getLastUserId(), user.id) === "switch") {
+        setLastUserId(user.id);
+        void clearLocalUserData().finally(() => window.location.assign("/"));
+        return;
+      }
+    }
+
     const S = { ready: false, dirty: false, authed: false };
     // 推送串行化：飞行中的请求放在这里，后到的 pushNow 等它结束再决定
     let inflight: Promise<void> | null = null;
@@ -203,7 +219,7 @@ export function PlatformSync() {
         timer = null;
       }
     };
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, user?.id]);
 
   return null;
 }

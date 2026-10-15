@@ -39,7 +39,8 @@ const nextConfig = {
 };
 
 const CorsHeaders = [
-  { key: "Access-Control-Allow-Credentials", value: "true" },
+  // 不与 ACAO:* 同发 Access-Control-Allow-Credentials：畸形组合会被浏览器拒绝，
+  // 且应用鉴权走同源（cookie + /bff 反代），无需放行跨域凭据请求。
   { key: "Access-Control-Allow-Origin", value: "*" },
   {
     key: "Access-Control-Allow-Methods",

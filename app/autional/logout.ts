@@ -12,9 +12,7 @@ import {
   AUTIONAL_LOGOUT_CONFIRM_PATH,
   AUTIONAL_LOGOUT_PATH,
 } from "./config";
-import { StoreKey } from "@/app/constant";
-import { indexedDBStorage } from "@/app/utils/indexedDB-storage";
-import { safeLocalStorage } from "@/app/utils";
+import { clearLocalUserData } from "./user-switch";
 
 let beforeLogoutHook: (() => Promise<void>) | null = null;
 
@@ -73,31 +71,6 @@ export function buildStandardLogoutUrl(): string {
         "",
       )}${AUTIONAL_LOGOUT_CONFIRM_PATH}`;
   return `${endpoint}?${params.toString()}`;
-}
-
-/** 防跨用户数据泄漏：清除本机持久化的会话数据（IndexedDB + localStorage 镜像）。 */
-async function clearLocalUserData(): Promise<void> {
-  const keys = [
-    StoreKey.Chat,
-    StoreKey.Access,
-    StoreKey.Config,
-    StoreKey.Mask,
-    StoreKey.Prompt,
-    StoreKey.Sync,
-  ];
-  const ls = safeLocalStorage();
-  for (const key of keys) {
-    try {
-      await indexedDBStorage.removeItem(key);
-    } catch {
-      // 存储不可用：忽略（页面即将整体跳转离开）
-    }
-    try {
-      ls?.removeItem(key);
-    } catch {
-      // ignore
-    }
-  }
 }
 
 export async function performLogout(autional: Autional): Promise<void> {
