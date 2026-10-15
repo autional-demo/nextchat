@@ -66,13 +66,14 @@
 | D3N | Windows **EBUSY**：`.next/standalone` 文件锁 | Windows 文件锁行为 | build 报错 | 等待后重试（**不删 `.next`**——用户指令） |
 | D4N | `yarn test:ci` 在 git-bash 失败 | `$(yarn bin jest)` 返回 shell shim → SyntaxError | 测试报错 | 直调 `node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js`；**185/185** |
 | D5N | 中继目录无 `gpt-4o-mini`（部分模型 400/503） | `api.tu-zi.com` 模型目录差异 | `/v1/models` 列表对照 | `DEFAULT_MODEL=gpt-5` |
-| D6N | 自动标题静默失败（候选，未修） | `SUMMARIZE_MODEL="gpt-4o-mini"` 硬编码（`app/constant.ts:423`），中继无此模型 | 代码级 + 语义推断 | 留档（改自动标题模型可解） |
+| D6N | 自动标题静默失败（**2026-10-15 已修**） | `SUMMARIZE_MODEL="gpt-4o-mini"` 硬编码（`app/constant.ts`）；且该名在内置模型表 `available:true` → getSummarizeModel 命中即发给中继，而中继无 4o 通道 → 503 → `status!==200` 标题不落（静默） | 代码链核验（chat.ts:127-144 命中优先于回退）+ 中继探活（4o 系无通道；5.1+ 全系 503 资源不足 8/8；gpt-5 8/8 绿） | `SUMMARIZE_MODEL="gpt-5"`（实测可用最低价档，与 `DEFAULT_MODEL` 同源）；部署后复验自动标题 |
 | D7N | 服务端 `DEFAULT_MODEL` 不生效（上游缺陷） | `app/store/access.ts` fetch 仅写 `DEFAULT_CONFIG` —— persist 水合后活 store 为独立对象，引用已分离 | 生产 `/api/config` 返回 gpt-5 但实际请求发 mini | fork 修复：① `useAppConfig.getState().update()` 同步活 store；② `app/store/config.ts` 种子改 `gpt-5` |
 | D8N | D7N 修复后浏览器仍回 mini（终根因） | 上游 `mergeWithUpdate` typo（`app/utils/sync.ts:151-165`：`remoteUpdateTime` 误读 `localState.lastUpdateTime` → 恒 tie → `merge(local, remote)` **remote 恒胜**）→ 每次加载 pull 把 blob 旧 config 回灌 | PUT 体核验 + 重载回归 | 数据收敛（UI 改模型 → 推送 blob）；**加载语义 = blob 为事实源**（复跑注意） |
 | D9N | NextChat 服务端日志明文打印完整中继密钥 | 上游行为（`[Server Config] using 1 of 1 api key` 等） | build/运行日志现场 | 输出过滤 + **文档零引用**（本文件绝不复述键值） |
 | D10N | Windows 孤儿进程/端口冲突 → 静态块 404 | TaskStop 杀壳不杀 node；dev + 新实例双写 `.next` | netstat/taskkill 现场 | `taskkill //F //PID`；避免删 `.next` |
 | D11N | 桌面端会话删除**无确认直删** + 撤销 toast（窗口过期即丢） | 上游行为：`chat-list.tsx:157-158` 非 narrow 桌面环境绕过 `showConfirm` | 误点现场（测试对话被删） | 观察记录；恢复兜底 = 平台 blob（拉回完整会话） |
 | D12N | 演示对话的**最终消息不落平台**（blob 内为流式中途的空版本） | fork 自写 `platform-sync.tsx` 推送竞态：飞行中 push 的成功回调 `dirty=false` 抹掉飞行期新变更，定时器已被消费 → 最终内容永不推送 | console + network 时序复原（PUT #61 中途体发出、飞行期变更被抹） | 修复：发送前消费脏标记 + inflight 串行化 + finally 兜底重排 → 部署 `jy3ion23m` → 生产复验（#186 中途 / **#188 终稿完整**） |
+| D13N | 预提交钩子在 `app/constant.ts` 上**崩溃**（`TypeError … reading 'loc'`）→ 任何暂存该文件的提交必被阻塞（潜伏已久：该文件此前从未进过暂存区；`next lint` 同崩） | eslint 8.49 `no-unused-vars` × @typescript-eslint/parser 6.4.0 组合缺陷：**引号枚举成员**（`"302.AI"`，L77/L136/L163）产生的变量无 identifier 节点 → `Program:exit` 上报缺 loc → rule-composer 崩 | 最小复现 `enum E { "Foo" = "/x" }` 即崩；前缀二分定位 3 处引号成员；config 级 off 对照（规则不执行 → 不崩） | `.eslintrc.json` override：仅对 `app/constant.ts` 停用该规则（文件零 import，规则不适用，零覆盖损失；**inline disable 无效**——ESLint 对 inline 注释先执行后过滤，拦不住执行期崩溃）；工具链升级或上游去引号成员后可移除 |
 
 ### E 组（Vercel 部署 + 平台缺陷）
 

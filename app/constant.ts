@@ -420,7 +420,9 @@ You are an AI assistant with access to system tools. Your role is to help users 
    
 `;
 
-export const SUMMARIZE_MODEL = "gpt-4o-mini";
+// 自动标题/摘要模型：中继目录 4o 系列整体退场（2026-10-15 实测无 gpt-4o-mini），且 5.1+ 全系
+// 503 资源不足（8 连采全败），gpt-5 实测 8/8 绿 → 取实测可用的最低价档（与 DEFAULT_MODEL 同源）。
+export const SUMMARIZE_MODEL = "gpt-5";
 export const GEMINI_SUMMARIZE_MODEL = "gemini-pro";
 export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-chat";
 
@@ -493,7 +495,7 @@ export const VISION_MODEL_REGEXES = [
   /o3/,
   /o4-mini/,
   /grok-4/i,
-  /gpt-5/
+  /gpt-5/,
 ];
 
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
@@ -561,7 +563,7 @@ const googleModels = [
   "gemini-2.0-pro-exp",
   "gemini-2.0-pro-exp-02-05",
   "gemini-2.5-pro-preview-06-05",
-  "gemini-2.5-pro"
+  "gemini-2.5-pro",
 ];
 
 const anthropicModels = [

@@ -92,6 +92,8 @@
 9. **Default model seed.** Server `DEFAULT_MODEL` flows in via `useAccessStore.fetch()`; the fix
    additionally syncs the live (rehydrated) config store and seeds `gpt-5` in
    `app/store/config.ts` (notes D7N/D8N — the relay catalog has no `gpt-4o-mini`).
+   Auto-title likewise uses a relay-safe model: `SUMMARIZE_MODEL = "gpt-5"` in `app/constant.ts`
+   (notes D6N — the stock `gpt-4o-mini` is not served and fails silently).
 
 ## Environment variables
 
