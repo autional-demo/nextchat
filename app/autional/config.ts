@@ -18,13 +18,6 @@ export const AUTIONAL_AUTHORIZE_URL =
 // OIDC RP-Initiated Logout（end_session_endpoint，必须整页跳转）。
 export const AUTIONAL_LOGOUT_PATH = "/oauth/api/v1/oauth/logout";
 
-// Auth 域（登录页 / 登出确认页所在域，与 ISSUER 的 api 域区分）。
-export const AUTIONAL_AUTH_BASE =
-  process.env.NEXT_PUBLIC_AUTIONAL_AUTH_BASE ?? "https://auth.autional.cn";
-
-// 登出确认页路径：无 id_token_hint 时标准端点绕行直达此页，见 logout.ts 平台缺陷注记。
-export const AUTIONAL_LOGOUT_CONFIRM_PATH = "/logout-confirm";
-
 // SDK 只写 localStorage，应用侧把 access token 镜像进同名 cookie 供
 // middleware / 服务端路由读取（服务端不信任其内容，逐请求 /auth/me 校验）。
 export const AUTIONAL_TOKEN_COOKIE = "autional_token";

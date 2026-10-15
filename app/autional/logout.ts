@@ -7,9 +7,7 @@
 import type { Autional } from "@autional/core";
 import {
   AUTIONAL_APP_ID,
-  AUTIONAL_AUTH_BASE,
   AUTIONAL_ISSUER,
-  AUTIONAL_LOGOUT_CONFIRM_PATH,
   AUTIONAL_LOGOUT_PATH,
 } from "./config";
 import { clearLocalUserData } from "./user-switch";
@@ -59,17 +57,12 @@ export function buildStandardLogoutUrl(): string {
   params.set("client_id", AUTIONAL_APP_ID);
   params.set("post_logout_redirect_uri", `${window.location.origin}/`);
   params.set("state", generateLogoutState());
-  // 平台缺陷绕行（2026-10-15 生产实测）：无 id_token_hint 时标准端点 302 到
-  // auth.autional.tianv.mobi/logout-confirm（死域 404，OP 会话不终结）；同一确认页
-  // 在 auth 域可用且能完成登出。hint 取自持久化载荷 idToken（0.3.x 活跃会话实测
-  // 非 null；仅清除态或未持久化时为 null）——有 hint 走标准端点，无 hint 直达
-  // auth 域确认页；平台修复后本分支可移除。
-  const endpoint = hint
-    ? `${AUTIONAL_ISSUER.replace(/\/+$/, "")}${AUTIONAL_LOGOUT_PATH}`
-    : `${AUTIONAL_AUTH_BASE.replace(
-        /\/+$/,
-        "",
-      )}${AUTIONAL_LOGOUT_CONFIRM_PATH}`;
+  // 无 id_token_hint 时标准端点 302 至 auth 域确认页（平台 2026-10-15 修复，
+  // 见 lab README 实验 1 E2N 记录）。
+  const endpoint = `${AUTIONAL_ISSUER.replace(
+    /\/+$/,
+    "",
+  )}${AUTIONAL_LOGOUT_PATH}`;
   return `${endpoint}?${params.toString()}`;
 }
 
