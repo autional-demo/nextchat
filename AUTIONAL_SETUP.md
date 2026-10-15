@@ -143,7 +143,7 @@ npx vercel deploy --prod --yes --archive=tgz
 | Vercel project     | `nextchat-demo` (`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`, team `team_DH5R480Z49vsc8ZrHBVHiYY3`)                                                                               |
 | Blob store         | `store_QnigCBrtCrLy22tz` (iad1, **private**; static-token connect mode injects `BLOB_READ_WRITE_TOKEN`)                                                                  |
 | Production URL     | **https://nextchat-demo-eight.vercel.app**                                                                                                                               |
-| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes) → `o8d7gw9ai` (SUMMARIZE_MODEL fix, current) |
+| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes) → `o8d7gw9ai` (SUMMARIZE_MODEL fix) → `ffpvfbykx` (SDK bump, fork `ffdbb049`, current) |
 | Deploy mode        | CLI direct upload (`--archive=tgz`); `.vercelignore` excludes `.env*`, `.data/`, `.next/`, `.swc/`                                                                       |
 
 ## Verification record (2026-10-15)
@@ -168,7 +168,14 @@ npx vercel deploy --prod --yes --archive=tgz
   100+ char message → gpt-5 streaming reply 200 → **title call `gpt-5` (stream:false) 200 →
   topic “杭州三日游”** + memory summarize `gpt-5` 200 (both previously failed silently on the
   stock `gpt-4o-mini`; notes D6N) → PUT user-state 200 → hard reload past the 5-min token TTL →
-  one-shot SSO re-replay (known boundary, C5N) → title restored from the platform blob.
+  one-shot SSO re-replay (known boundary, C5N) → title restored from the platform blob. That
+  re-replay boundary is now closed by the SDK bump (see next round).
+- Production E2E — SDK-bump round (deploy `ffpvfbykx`, fork `ffdbb049`): C6N closed-loop probe
+  **13/13** — synthetic-expired access → reload → silent refresh (new value, expIn≈296 s) / no
+  login bounce / rich session kept (C13 counter-check) / cookie bridge updated / no SSO authorize
+  replay / `/api/user-state` 200 (refreshed session accepted by the server gate — same gate as
+  pushes). Supersedes the former "hard reload past the 5-min TTL → one-shot SSO re-replay"
+  boundary: workaround chain removed app-side, fixed in core 0.3.5 / next 0.4.0.
 
 ## Known boundaries
 
@@ -176,6 +183,6 @@ npx vercel deploy --prod --yes --archive=tgz
 - Access store (API keys) is device-local by design; logout clears it.
 - Access token TTL is 5 min; expiry is handled by the SDK refresh chain (core 0.3.5 / next 0.4.0,
   2026-10-15) — a reload refreshes in place, no SSO replay, pushes no longer stall
-  (C6N probe 13/13; notes C5N/C6N).
+  (C6N probe 13/13, local + production 2026-10-15; notes C5N/C6N).
 - Desktop session-row delete is one-click (no confirm dialog, undo toast only) — upstream
   NextChat behavior; recovery via platform blob if a push already landed (notes D11N).
