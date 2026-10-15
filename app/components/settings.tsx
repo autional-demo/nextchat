@@ -89,6 +89,9 @@ import { useMaskStore } from "../store/mask";
 import { ProviderType } from "../utils/cloud";
 import { TTSConfigList } from "./tts-config";
 import { RealtimeConfigList } from "./realtime-chat/realtime-config";
+import { useAutional, useAutionalContext } from "@autional/react";
+import { performLogout } from "../autional/logout";
+import { getPortalUrl } from "../autional/config";
 
 function EditPromptModal(props: { id: string; onClose: () => void }) {
   const promptStore = usePromptStore();
@@ -278,6 +281,40 @@ function DangerItems() {
             }
           }}
           type="danger"
+        />
+      </ListItem>
+    </List>
+  );
+}
+
+function AccountItems() {
+  const { user, isAuthenticated } = useAutional();
+  const { autional } = useAutionalContext();
+
+  if (!isAuthenticated) return null;
+
+  const display = user?.email || user?.username || "";
+
+  return (
+    <List>
+      <ListItem
+        title={Locale.Settings.Account.Title}
+        subTitle={display || Locale.Settings.Account.SubTitle}
+      >
+        <Link href={getPortalUrl()} target="_blank" className="link">
+          {Locale.Settings.Account.Portal}
+        </Link>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Account.Logout.Title}
+        subTitle={Locale.Settings.Account.Logout.SubTitle}
+      >
+        <IconButton
+          aria={Locale.Settings.Account.Logout.Title}
+          text={Locale.Settings.Account.Logout.Action}
+          onClick={() => {
+            void performLogout(autional);
+          }}
         />
       </ListItem>
     </List>
@@ -1459,44 +1496,44 @@ export function Settings() {
     </>
   );
 
-  const ai302ConfigComponent = accessStore.provider === ServiceProvider["302.AI"] && (
+  const ai302ConfigComponent = accessStore.provider ===
+    ServiceProvider["302.AI"] && (
     <>
       <ListItem
-          title={Locale.Settings.Access.AI302.Endpoint.Title}
-          subTitle={
-            Locale.Settings.Access.AI302.Endpoint.SubTitle +
-            AI302.ExampleEndpoint
+        title={Locale.Settings.Access.AI302.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.AI302.Endpoint.SubTitle + AI302.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
+          type="text"
+          value={accessStore.ai302Url}
+          placeholder={AI302.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.ai302Url = e.currentTarget.value),
+            )
           }
-        >
-          <input
-            aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
-            type="text"
-            value={accessStore.ai302Url}
-            placeholder={AI302.ExampleEndpoint}
-            onChange={(e) =>
-              accessStore.update(
-                (access) => (access.ai302Url = e.currentTarget.value),
-              )
-            }
-          ></input>
-        </ListItem>
-        <ListItem
-          title={Locale.Settings.Access.AI302.ApiKey.Title}
-          subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
-        >
-          <PasswordInput
-            aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
-            value={accessStore.ai302ApiKey}
-            type="text"
-            placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
-            onChange={(e) => {
-              accessStore.update(
-                (access) => (access.ai302ApiKey = e.currentTarget.value),
-              );
-            }}
-          />
-        </ListItem>
-      </>
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.AI302.ApiKey.Title}
+        subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
+          value={accessStore.ai302ApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.ai302ApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+    </>
   );
 
   return (
@@ -1524,6 +1561,7 @@ export function Settings() {
         </div>
       </div>
       <div className={styles["settings"]}>
+        <AccountItems />
         <List>
           <ListItem title={Locale.Settings.Avatar}>
             <Popover

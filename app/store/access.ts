@@ -23,7 +23,7 @@ import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
 import { createPersistStore } from "../utils/store";
 import { ensure } from "../utils/clone";
-import { DEFAULT_CONFIG } from "./config";
+import { DEFAULT_CONFIG, useAppConfig } from "./config";
 import { getModelProvider } from "../utils/model";
 
 let fetchState = 0; // 0 not fetch, 1 fetching, 2 done
@@ -266,6 +266,12 @@ export const useAccessStore = createPersistStore(
             const [model, providerName] = getModelProvider(defaultModel);
             DEFAULT_CONFIG.modelConfig.model = model;
             DEFAULT_CONFIG.modelConfig.providerName = providerName as any;
+            // persist 水合后活 store 的 modelConfig 与 DEFAULT_CONFIG 引用已分离，需同步写入，
+            // 否则服务端 DEFAULT_MODEL 对新会话不生效
+            useAppConfig.getState().update((config) => {
+              config.modelConfig.model = model as any;
+              config.modelConfig.providerName = providerName as any;
+            });
           }
 
           return res;

@@ -163,6 +163,17 @@ const en: LocaleType = {
     Title: "Settings",
     SubTitle: "All Settings",
     ShowPassword: "ShowPassword",
+    Account: {
+      Title: "Account",
+      SubTitle: "Autional account",
+      Portal: "Open account portal",
+      Logout: {
+        Title: "Sign Out",
+        SubTitle:
+          "Sign out ends the session and clears cached data on this device",
+        Action: "Sign Out",
+      },
+    },
     Danger: {
       Reset: {
         Title: "Reset All Settings",

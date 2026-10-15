@@ -49,3 +49,6 @@ masks.json
 
 # mcp config
 app/mcp/mcp_config.json
+
+# state-store 本地回退目录（多用户数据）
+.data/

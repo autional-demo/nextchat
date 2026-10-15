@@ -161,6 +161,17 @@ const cn = {
     SubTitle: "所有设置选项",
     ShowPassword: "显示密码",
 
+    Account: {
+      Title: "账号",
+      SubTitle: "Autional 账号",
+      Portal: "打开账号门户",
+      Logout: {
+        Title: "退出登录",
+        SubTitle: "退出将结束会话并清除本机缓存的账号数据",
+        Action: "退出登录",
+      },
+    },
+
     Danger: {
       Reset: {
         Title: "重置所有设置",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { STORAGE_KEY, internalAllowedWebDavEndpoints } from "../../../constant";
 import { getServerSideConfig } from "@/app/config/server";
+import { requireSession } from "@/app/autional/server-auth";
 
 const config = getServerSideConfig();
 
@@ -24,6 +25,8 @@ async function handle(
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
+  const sessionError = await requireSession(req);
+  if (sessionError) return sessionError;
   const folder = STORAGE_KEY;
   const fileName = `${folder}/backup.json`;
 

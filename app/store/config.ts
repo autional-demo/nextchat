@@ -64,7 +64,8 @@ export const DEFAULT_CONFIG = {
   models: DEFAULT_MODELS as any as LLMModel[],
 
   modelConfig: {
-    model: "gpt-4o-mini" as ModelType,
+    // 默认模型对齐 Vercel env DEFAULT_MODEL（本实验中转目录无 gpt-4o-mini）
+    model: "gpt-5" as ModelType,
     providerName: "OpenAI" as ServiceProvider,
     temperature: 0.5,
     top_p: 1,

@@ -32,6 +32,9 @@ const nextConfig = {
   },
   experimental: {
     forceSwcTransforms: true,
+    // @vercel/blob → undici（含私有类字段语法）无法被 Next 14 的打包链路解析；
+    // 外置为运行时 require（Node 18+ 原生支持），亦避免 edge/node 双构建告警。
+    serverComponentsExternalPackages: ["@vercel/blob"],
   },
 };
 
@@ -64,6 +67,16 @@ if (mode !== "export") {
 
   nextConfig.rewrites = async () => {
     const ret = [
+      // Autional 同源反代：浏览器侧 SDK / OAuth 换票 / 身份 API 全部经本域
+      // /bff 转发到 .cn 区，避免跨域并保持 cookie 同源（skill §5.2b 反代形态）。
+      {
+        source: "/bff/:path*",
+        destination: "https://api.autional.cn/bff/:path*",
+      },
+      {
+        source: "/.well-known/:path*",
+        destination: "https://api.autional.cn/.well-known/:path*",
+      },
       // adjust for previous version directly using "/api/proxy/" as proxy base route
       // {
       //   source: "/api/proxy/v1/:path*",

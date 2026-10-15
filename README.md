@@ -35,6 +35,35 @@ English / [简体中文](./README_CN.md)
 
 </div>
 
+## 🔐 Autional 多用户改造（demo 分支）
+
+> 本仓库基于 [ChatGPTNextWeb/NextChat](https://github.com/ChatGPTNextWeb/NextChat) fork 改造：接入
+> [Autional](https://www.autional.cn) 身份平台 SSO 登录，从单用户应用变为多用户产品。
+> 每个账号的聊天记录与设置**按用户隔离**，并**持久化到平台存储**（Vercel Blob private）。
+
+改动要点（详细清单见 `AUTIONAL_CHANGES.md`）：
+
+| 模块 | 行为 |
+| --- | --- |
+| 登录 | OIDC 授权码 + PKCE 流；未登录访问 `/` 自动跳 `/login` |
+| 会话 | access token 镜像进 `autional_token` cookie；服务端逐请求 `/auth/me` 权威校验（60s 微缓存） |
+| 数据隔离 | 登录后拉取远端状态与本地合并；聊天/设置变更防抖上推 `state/<userId>.json`；登出清本机缓存 |
+| 路由门禁 | 全部 LLM 路由（`/api/<provider>/*`、`/api/tencent`）与 `/api/proxy`、`/api/webdav`、`/api/upstash`、`/api/artifacts` 要求已登录 |
+| 登出 | RP-Initiated Logout（终结 IdP 会话）+ 本地数据清理 |
+
+部署环境变量（`.cn` 区）：
+
+```bash
+NEXT_PUBLIC_AUTIONAL_APP_ID=client-xxxxxxxxxxxx            # OAuth 客户端 ID（公开）
+NEXT_PUBLIC_AUTIONAL_ISSUER=https://api.autional.cn        # 身份平台 API 域
+NEXT_PUBLIC_AUTIONAL_AUTHORIZE_URL=https://auth.autional.cn/oauth/api/v1/oauth/authorize
+NEXT_PUBLIC_AUTIONAL_TENANT_SLUG=your-tenant               # 门户链接用
+BLOB_READ_WRITE_TOKEN=...                                  # Vercel Blob（连接 Store 后自动注入）
+```
+
+已知边界：单文件状态快照上限 4MB（Vercel 请求体限制 4.5MB），超限时本地保留、跳过上推；
+API Key 等敏感配置存于本机 Access store，**不上云**，登出即清除。
+
 ## ❤️ Sponsor AI API
 
 <a href='https://302.ai/'>

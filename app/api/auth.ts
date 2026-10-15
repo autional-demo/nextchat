@@ -2,6 +2,11 @@ import { NextRequest } from "next/server";
 import { getServerSideConfig } from "../config/server";
 import md5 from "spark-md5";
 import { ACCESS_CODE_PREFIX, ModelProvider } from "../constant";
+import {
+  AUTIONAL_TOKEN_COOKIE,
+  decodeCookieToken,
+} from "@/app/autional/config";
+import { verifyAccessToken } from "@/app/autional/server-auth";
 
 function getIP(req: NextRequest) {
   let ip = req.ip ?? req.headers.get("x-real-ip");
@@ -24,7 +29,20 @@ function parseApiKey(bearToken: string) {
   };
 }
 
-export function auth(req: NextRequest, modelProvider: ModelProvider) {
+export async function auth(req: NextRequest, modelProvider: ModelProvider) {
+  // ── Autional 会话门（多用户模式：所有 LLM 路由要求已登录账号）──
+  // cookie 内容不可信：token → /auth/me 权威校验（60s 微缓存，见 server-auth）。
+  const token = decodeCookieToken(
+    req.cookies.get(AUTIONAL_TOKEN_COOKIE)?.value,
+  );
+  const user = await verifyAccessToken(token);
+  if (!user) {
+    return {
+      error: true,
+      msg: "unauthorized: please sign in with your Autional account",
+    };
+  }
+
   const authToken = req.headers.get("Authorization") ?? "";
 
   // check if it is openai api key or user token

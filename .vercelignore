@@ -1,0 +1,6 @@
+# CLI 直传排除：本地凭证与运行产物（构建在 Vercel 远端执行）
+.env
+.env.*
+.data/
+.next/
+.swc/

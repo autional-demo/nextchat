@@ -7,6 +7,9 @@ import type { Metadata, Viewport } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleTagManager, GoogleAnalytics } from "@next/third-parties/google";
 import { getServerSideConfig } from "./config/server";
+import { AutionalProviders } from "./components/autional-providers";
+import { SessionCookieSync } from "./components/session-cookie-sync";
+import { PlatformSync } from "./components/platform-sync";
 
 export const metadata: Metadata = {
   title: "NextChat",
@@ -50,7 +53,11 @@ export default function RootLayout({
         <script src="/serviceWorkerRegister.js" defer></script>
       </head>
       <body>
-        {children}
+        <AutionalProviders>
+          <SessionCookieSync />
+          <PlatformSync />
+          {children}
+        </AutionalProviders>
         {serverConfig?.isVercel && (
           <>
             <SpeedInsights />
