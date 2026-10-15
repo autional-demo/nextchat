@@ -64,7 +64,7 @@ describe("buildStandardLogoutUrl", () => {
     expect(url.searchParams.get("id_token_hint")).toBeNull();
   });
 
-  test("falls back to confirm page when idToken is null (SDK persists null)", () => {
+  test("falls back to confirm page when idToken is null (cleared/legacy payload)", () => {
     window.localStorage.setItem(
       "autional_tokens",
       JSON.stringify({ idToken: null, accessToken: "at" }),

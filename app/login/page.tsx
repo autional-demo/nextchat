@@ -52,6 +52,8 @@ export default function LoginPage() {
     void handleLogin();
   }, [isLoading, isAuthenticated, handleLogin]);
 
+  const disabled = pending || isLoading;
+
   return (
     <div
       style={{
@@ -60,19 +62,30 @@ export default function LoginPage() {
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
+        background: "var(--gray)",
+        color: "var(--black)",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 380,
-          border: "1px solid rgba(127,127,127,0.25)",
+          maxWidth: 400,
+          background: "var(--white)",
+          border: "var(--border-in-light)",
           borderRadius: 12,
-          padding: "32px 28px",
+          padding: "36px 32px",
           textAlign: "center",
+          boxShadow: "var(--card-shadow)",
         }}
       >
-        <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
+        <img
+          src="/android-chrome-192x192.png"
+          alt="NextChat"
+          width={56}
+          height={56}
+          style={{ borderRadius: 14 }}
+        />
+        <h1 style={{ fontSize: 20, fontWeight: 600, margin: "16px 0 0" }}>
           NextChat · 多用户演示
         </h1>
         <p
@@ -94,6 +107,7 @@ export default function LoginPage() {
               borderRadius: 8,
               fontSize: 12,
               wordBreak: "break-all",
+              textAlign: "left",
               background: "rgba(220,38,38,0.1)",
               color: "#dc2626",
             }}
@@ -104,21 +118,27 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleLogin}
-          disabled={pending || isLoading}
+          disabled={disabled}
           style={{
             marginTop: 24,
             width: "100%",
             padding: "10px 16px",
             borderRadius: 8,
             border: "none",
-            cursor: pending ? "wait" : "pointer",
-            opacity: pending || isLoading ? 0.6 : 1,
+            cursor: disabled ? "not-allowed" : "pointer",
             fontSize: 14,
             fontWeight: 500,
+            background: "var(--black)",
+            color: "var(--white)",
+            transition: "opacity 0.2s ease",
+            opacity: disabled ? 0.6 : 1,
           }}
         >
           {pending ? "跳转中…" : "使用 Autional 登录"}
         </button>
+        <p style={{ margin: "20px 0 0", fontSize: 11, opacity: 0.45 }}>
+          基于 ChatGPTNextWeb/NextChat（MIT 许可）· Autional demo
+        </p>
       </div>
     </div>
   );

@@ -63,8 +63,9 @@ export function buildStandardLogoutUrl(): string {
   params.set("state", generateLogoutState());
   // 平台缺陷绕行（2026-10-15 生产实测）：无 id_token_hint 时标准端点 302 到
   // auth.autional.tianv.mobi/logout-confirm（死域 404，OP 会话不终结）；同一确认页
-  // 在 auth 域可用且能完成登出。本 SDK 持久化 idToken 恒为 null（登录态必无 hint），
-  // 故无 hint 时直达 auth 域确认页；平台修复后本分支可移除。
+  // 在 auth 域可用且能完成登出。hint 取自持久化载荷 idToken（0.3.x 活跃会话实测
+  // 非 null；仅清除态或未持久化时为 null）——有 hint 走标准端点，无 hint 直达
+  // auth 域确认页；平台修复后本分支可移除。
   const endpoint = hint
     ? `${AUTIONAL_ISSUER.replace(/\/+$/, "")}${AUTIONAL_LOGOUT_PATH}`
     : `${AUTIONAL_AUTH_BASE.replace(

@@ -41,15 +41,19 @@ English / [简体中文](./README_CN.md)
 > [Autional](https://www.autional.cn) 身份平台 SSO 登录，从单用户应用变为多用户产品。
 > 每个账号的聊天记录与设置**按用户隔离**，并**持久化到平台存储**（Vercel Blob private）。
 
+> **Deploy**：页首与「Get Started」的一键部署按钮，部署的是**上游** NextChat（无 SSO）；
+> 本 fork 需要 Autional 环境变量与预链接的 Vercel 项目 —— 见 `AUTIONAL_SETUP.md` →「Deploying to Vercel」
+> （CLI 直传）。另见：`AUTIONAL_CHANGES.md`（改动清单）· `AI-ONBOARDING-NOTES.md`（接入问题日志）。
+
 改动要点（详细清单见 `AUTIONAL_CHANGES.md`）：
 
-| 模块 | 行为 |
-| --- | --- |
-| 登录 | OIDC 授权码 + PKCE 流；未登录访问 `/` 自动跳 `/login` |
-| 会话 | access token 镜像进 `autional_token` cookie；服务端逐请求 `/auth/me` 权威校验（60s 微缓存） |
-| 数据隔离 | 登录后拉取远端状态与本地合并；聊天/设置变更防抖上推 `state/<userId>.json`；登出清本机缓存 |
+| 模块     | 行为                                                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 登录     | OIDC 授权码 + PKCE 流；未登录访问 `/` 自动跳 `/login`                                                                           |
+| 会话     | access token 镜像进 `autional_token` cookie；服务端逐请求 `/auth/me` 权威校验（60s 微缓存）                                     |
+| 数据隔离 | 登录后拉取远端状态与本地合并；聊天/设置变更防抖上推 `state/<userId>.json`；登出清本机缓存                                       |
 | 路由门禁 | 全部 LLM 路由（`/api/<provider>/*`、`/api/tencent`）与 `/api/proxy`、`/api/webdav`、`/api/upstash`、`/api/artifacts` 要求已登录 |
-| 登出 | RP-Initiated Logout（终结 IdP 会话）+ 本地数据清理 |
+| 登出     | RP-Initiated Logout（终结 IdP 会话）+ 本地数据清理                                                                              |
 
 部署环境变量（`.cn` 区）：
 
@@ -158,6 +162,10 @@ For enterprise inquiries, please contact: **business@nextchat.club**
 2. Click
    [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYidadaa%2FChatGPT-Next-Web&env=OPENAI_API_KEY&env=CODE&project-name=chatgpt-next-web&repository-name=ChatGPT-Next-Web), remember that `CODE` is your page password;
 3. Enjoy :)
+
+> **Autional demo fork:** the one-click button deploys **upstream** NextChat (no SSO). This fork
+> needs the Autional environment variables and a pre-linked Vercel project — see
+> `AUTIONAL_SETUP.md` → "Deploying to Vercel" (CLI direct upload).
 
 ## FAQ
 
@@ -432,6 +440,9 @@ yarn dev
 ```
 
 ## Deployment
+
+> The Docker image and shell installer below deploy **upstream** NextChat (no SSO). For this
+> fork see `AUTIONAL_SETUP.md` → "Deploying to Vercel" (CLI direct upload).
 
 ### Docker (Recommended)
 

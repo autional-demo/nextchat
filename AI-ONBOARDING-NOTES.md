@@ -53,7 +53,7 @@
 | C1N | SDK `createTrialTenant()` 直连 **404**（novel C1R **复发**） | `@autional/core` 请求路径缺 `/bff` + `tenant/` 段（novel 源码实证路径未变） | SDK 形态 404；真实端点对照 201 | 原始 fetch 直调真实端点 → **201**（`provision/nextchat-trial-register.mjs`） |
 | C2N | 管理面链核验：exp1 C5/C6（管理员密码传输 / RBAC 播种）**未复现** | 10-10 三仓修复已上 prod 生效 | `nextchat-admin-verify.mjs` T1-T3 PASS | 无处置（好消息，修复效果再证） |
 | C3N | `middleware.ts` 引 `@autional/next` 导致编译失败（novel C7 **同源**） | SDK dist 单文件 bundle 丢失 `"use client"` 标记，react-server 编译失败 | 本地 build 报错 | 本地等价实现（cookie 存在性门 `/` → `/login`）；token 真实性不在中件层信任（见 S1N） |
-| C4N | 登出 `id_token_hint` 永远不可得 | SDK 持久化 schema：`autional_tokens` 恒为 `{accessToken, refreshToken:null, idToken:null, user}` | localStorage 键值转储 | 无 hint 走确认页分支（见 E2N）；SDK 侧待修 |
+| C4N | 登出 `id_token_hint` ~~永远不可得~~（**2026-10-15 修正**：活跃会话 hint 可得） | 原观察系**清除态**载荷；0.3.x 活跃会话实测持久化含真实 `idToken`(785) + `refreshToken`(35) | localStorage 转储（清除态 vs 活跃态对照）+ JWT 解码（id ttl=1800s） | hint 存在 → 标准端点登出（见 E2N 更新）；为 null 时走确认页分支 |
 | C5N | 会话闲置必失效（novel C12/C13 **同源复现**） | 刷新链缺分支 + seedStorage 覆写（同 novel 根因；refresh 401 良性、无 offline_access） | 现场观察：TTL 后请求 401；重载 → SSO 自动重放续登 | 应用侧缓解：`/login` 残留 cookie 自动重放（只试一次）+ PlatformSync 兜底；SDK 刷新链待平台修复 |
 | C6N | cookie 桥接 token 过期后**推送静默停摆**（页面开 10+ 分钟） | 复合 C5N：刷新不发生 → cookie 不同步 → `PUT /api/user-state` 401 → 客户端停推（无提示） | PUT 401 + console 时序 | 重载/自动重放恢复；记入 SETUP §Known boundaries |
 
@@ -79,7 +79,7 @@
 | # | 现象 | 根因 | 证据 | 处置 |
 | - | ---- | ---- | ---- | ---- |
 | E1N | 本地登出后落 api 域 JSON（`{"code":0,"message":"logged_out"}`）而不回跳应用 | `post_logout_redirect_uris` 未注册（novel E9 谱系） | 响应体原文 | `nextchat-update-client.mjs` 注册 `http://localhost:3000/` → 一跳回 `/login` |
-| E2N | 生产登出 → `auth.autional.tianv.mobi/logout-confirm` **404**（死域；OP 会话不终结） | 双层：① fork 无 hint（C4N）② 平台标准端点在无 hint 时 302 死域 | 两域 curl 对照（`auth.autional.cn` 200 / `tianv.mobi` 404；state UUID 透传）；平台会话实际终结无僵尸 | fork 绕行：无 hint 直达 `auth.autional.cn/logout-confirm`；单测补强 5/5；部署 `7wk9zgi4o`；实点验证干净落 `/login` |
+| E2N | 生产登出 → `auth.autional.tianv.mobi/logout-confirm` **404**（死域；OP 会话不终结） | 双层：① fork 无 hint（C4N，后修正为清除态假象）② 平台标准端点在无 hint 时 302 死域 | 两域 curl 对照（`auth.autional.cn` 200 / `tianv.mobi` 404；state UUID 透传）；平台会话实际终结无僵尸 | fork 绕行：无 hint 直达 `auth.autional.cn/logout-confirm`；单测补强 5/5；部署 `7wk9zgi4o`；实点验证干净落 `/login`。**2026-10-15 更新**：hint 存在 → 标准端点实测走通（OP 会话终止、干净落 `/login`），两分支均在位 |
 | E3N | 登出确认页裸 i18n key（`logoutConfirm.*`） | 平台 i18n 缺键 | 页面快照 | 平台 UI 缺陷留档 |
 | E4N | 平台 login 偶发 **502**（瞬时） | 平台波动 | 两次 `POST …/auth/login` 502 → 8s 重试 200 | 重试即恢复；留档（脚本 5xx 重试惯例覆盖） |
 
@@ -87,7 +87,7 @@ E 组附 · 部署事实（2026-10-15）：
 
 - Vercel 项目 `nextchat-demo`（`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`，team `team_DH5R480Z49vsc8ZrHBVHiYY3`）；CLI 直传（`--archive=tgz`；`.vercelignore` 排除 `.env*` / `.data/` / `.next/` / `.swc/`）。
 - Blob 存储 `store_QnigCBrtCrLy22tz`（iad1，**private**；静态 token 模式注入 `BLOB_READ_WRITE_TOKEN`）。
-- 生产部署 4 次：`a88qg4u8f`（首次）→ `12n2ywy20`（DEFAULT_MODEL 修复）→ `jy3ion23m`（推送竞态修复 D12N）→ `7wk9zgi4o`（登出修复 E2N，当前）。
+- 生产部署 5 次：`a88qg4u8f`（首次）→ `12n2ywy20`（DEFAULT_MODEL 修复）→ `jy3ion23m`（推送竞态修复 D12N）→ `7wk9zgi4o`（登出修复 E2N）→ `a5azbokt0`（登录卡升级 + 推广卡移除 + README Deploy 注记，当前）。
 
 ### S 组（安全专项）
 

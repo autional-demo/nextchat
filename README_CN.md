@@ -14,6 +14,10 @@
 
 </div>
 
+> **Autional demo fork**：本仓库基于上游 NextChat fork，接入
+> [Autional](https://www.autional.cn) SSO 并改造为多用户（聊天记录与设置按账号隔离、持久化到平台存储）。
+> 接入与部署见 `AUTIONAL_SETUP.md`；改动清单见 `AUTIONAL_CHANGES.md`；问题日志见 `AI-ONBOARDING-NOTES.md`。
+
 ## Sponsor AI API
 
 <a href='https://302.ai/'>
@@ -45,6 +49,9 @@
    [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYidadaa%2FChatGPT-Next-Web&env=OPENAI_API_KEY&env=CODE&env=GOOGLE_API_KEY&project-name=chatgpt-next-web&repository-name=ChatGPT-Next-Web)，直接使用 Github 账号登录即可，记得在环境变量页填入 API Key 和[页面访问密码](#配置页面访问密码) CODE；
 3. 部署完毕后，即可开始使用；
 4. （可选）[绑定自定义域名](https://vercel.com/docs/concepts/projects/domains/add-a-domain)：Vercel 分配的域名 DNS 在某些区域被污染了，绑定自定义域名即可直连。
+
+> **Autional demo fork 注意**：一键部署按钮部署的是**上游** NextChat（无 SSO）；本 fork 需要
+> Autional 环境变量与预链接的 Vercel 项目 —— 见 `AUTIONAL_SETUP.md` →「Deploying to Vercel」（CLI 直传）。
 
 <div align="center">
    
@@ -314,6 +321,9 @@ BASE_URL=https://b.nextweb.fun/api/proxy
 3. 如果你想本地部署，请使用 `yarn install && yarn build && yarn start` 命令，你可以配合 pm2 来守护进程，防止被杀死，详情询问 ChatGPT。
 
 ## 部署
+
+> 下方宝塔 / 容器 / Shell 等部署方式部署的都是**上游** NextChat（无 SSO）；本 fork 部署见
+> `AUTIONAL_SETUP.md` →「Deploying to Vercel」（CLI 直传）。
 
 ### 宝塔面板部署
 

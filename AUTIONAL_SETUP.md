@@ -83,10 +83,12 @@
    **Access (API keys) and Sync (cloud creds) never leave the device**. Pushes serialize via an
    in-flight promise; the dirty flag is consumed before send and re-armed in `finally`.
 8. **Logout** (`app/autional/logout.ts`). flush → build logout URL → clear local stores →
-   SDK `logout()` → full-page navigation to the OP logout endpoint. Platform-defect workaround:
-   the SDK persists `idToken: null`, so no hint is ever available and the standard endpoint
-   302s to a dead host (`auth.autional.tianv.mobi`, 404) — with no hint we navigate directly to
-   `auth.autional.cn/logout-confirm` instead (notes E2N; removable when the platform fixes it).
+   SDK `logout()` → full-page navigation to the OP logout endpoint. With a hint, the standard
+   endpoint is used (a fresh credentials login persists a real idToken — verified in the
+   2026-10-15 production E2E: the OP session terminated, landing back on a clean `/login`).
+   With no hint, the standard endpoint 302s to a dead host (`auth.autional.tianv.mobi`, 404),
+   so we navigate directly to `auth.autional.cn/logout-confirm` instead (notes C4N/E2N;
+   removable when the platform fixes the no-hint fallback).
 9. **Default model seed.** Server `DEFAULT_MODEL` flows in via `useAccessStore.fetch()`; the fix
    additionally syncs the live (rehydrated) config store and seeds `gpt-5` in
    `app/store/config.ts` (notes D7N/D8N — the relay catalog has no `gpt-4o-mini`).
@@ -98,16 +100,16 @@
 
 Vercel project env (pushed by `provision/nextchat-vercel-setup.mjs`, values never echoed):
 
-| Key                                | Type      | Source                       |
-| ---------------------------------- | --------- | ---------------------------- |
-| `OPENAI_API_KEY`                   | encrypted | local `.env` (relay key)     |
-| `BASE_URL`                         | plain     | local `.env` (`api.tu-zi.com`) |
-| `DEFAULT_MODEL`                    | plain     | `gpt-5` (relay catalog)      |
-| `NEXT_PUBLIC_AUTIONAL_APP_ID`      | plain     | client id                    |
-| `NEXT_PUBLIC_AUTIONAL_ISSUER`      | plain     | `https://api.autional.cn`    |
-| `NEXT_PUBLIC_AUTIONAL_AUTHORIZE_URL` | plain   | auth-plane authorize URL     |
-| `NEXT_PUBLIC_AUTIONAL_TENANT_SLUG` | plain     | `nextchat-demo`              |
-| `BLOB_READ_WRITE_TOKEN`            | injected  | auto (store connect)         |
+| Key                                  | Type      | Source                         |
+| ------------------------------------ | --------- | ------------------------------ |
+| `OPENAI_API_KEY`                     | encrypted | local `.env` (relay key)       |
+| `BASE_URL`                           | plain     | local `.env` (`api.tu-zi.com`) |
+| `DEFAULT_MODEL`                      | plain     | `gpt-5` (relay catalog)        |
+| `NEXT_PUBLIC_AUTIONAL_APP_ID`        | plain     | client id                      |
+| `NEXT_PUBLIC_AUTIONAL_ISSUER`        | plain     | `https://api.autional.cn`      |
+| `NEXT_PUBLIC_AUTIONAL_AUTHORIZE_URL` | plain     | auth-plane authorize URL       |
+| `NEXT_PUBLIC_AUTIONAL_TENANT_SLUG`   | plain     | `nextchat-demo`                |
+| `BLOB_READ_WRITE_TOKEN`              | injected  | auto (store connect)           |
 
 ## Commands
 
@@ -115,25 +117,32 @@ Vercel project env (pushed by `provision/nextchat-vercel-setup.mjs`, values neve
 yarn dev                     # local dev → http://localhost:3000
 node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js --ci   # tests
 yarn build                   # production build
-# deploy (CLI, run inside nextchat/):
-VERCEL_TOKEN="$(cat ../provision/vercel-token.txt)" \
-VERCEL_ORG_ID=team_DH5R480Z49vsc8ZrHBVHiYY3 \
-VERCEL_PROJECT_ID=prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy \
-npx vercel deploy --prod --yes --archive=tgz
 node provision/nextchat-probe-isolation.mjs     # isolation probe (needs dev server)
 node provision/nextchat-live-auth-probe.mjs     # .cn contract probe
 ORIGIN=https://nextchat-demo-eight.vercel.app node provision/nextchat-update-client.mjs  # client refresh
 ```
 
-## Deployment
+## Deploying to Vercel
 
-| Item              | Value                                                                  |
-| ----------------- | ---------------------------------------------------------------------- |
-| Vercel project    | `nextchat-demo` (`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`, team `team_DH5R480Z49vsc8ZrHBVHiYY3`) |
-| Blob store        | `store_QnigCBrtCrLy22tz` (iad1, **private**; static-token connect mode injects `BLOB_READ_WRITE_TOKEN`) |
-| Production URL    | **https://nextchat-demo-eight.vercel.app**                             |
-| Production deploys| `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix, current) |
-| Deploy mode       | CLI direct upload (`--archive=tgz`); `.vercelignore` excludes `.env*`, `.data/`, `.next/`, `.swc/` |
+The upstream one-click deploy buttons (README) do not apply to this fork — it needs the
+Autional environment variables and a pre-linked Vercel project. Deploy is a **CLI direct
+upload** (the Vercel project is not Git-connected):
+
+```bash
+# run inside nextchat/ (token read from provision/, never committed, never echoed)
+VERCEL_TOKEN="$(cat ../provision/vercel-token.txt)" \
+VERCEL_ORG_ID=team_DH5R480Z49vsc8ZrHBVHiYY3 \
+VERCEL_PROJECT_ID=prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy \
+npx vercel deploy --prod --yes --archive=tgz
+```
+
+| Item               | Value                                                                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Vercel project     | `nextchat-demo` (`prj_UtLy0EVSpRhxUZQEPiv3HeSwnBPy`, team `team_DH5R480Z49vsc8ZrHBVHiYY3`)                                                                               |
+| Blob store         | `store_QnigCBrtCrLy22tz` (iad1, **private**; static-token connect mode injects `BLOB_READ_WRITE_TOKEN`)                                                                  |
+| Production URL     | **https://nextchat-demo-eight.vercel.app**                                                                                                                               |
+| Production deploys | `a88qg4u8f` (first) → `12n2ywy20` (DEFAULT_MODEL fix) → `jy3ion23m` (push-race fix) → `7wk9zgi4o` (logout fix) → `a5azbokt0` (login card + README deploy notes, current) |
+| Deploy mode        | CLI direct upload (`--archive=tgz`); `.vercelignore` excludes `.env*`, `.data/`, `.next/`, `.swc/`                                                                       |
 
 ## Verification record (2026-10-15)
 
@@ -147,6 +156,12 @@ ORIGIN=https://nextchat-demo-eight.vercel.app node provision/nextchat-update-cli
   reply → local wipe + reload recovers from the platform blob → logout round-trip (clean
   `/login`, OP session terminated, no zombie) → bob isolation (zero alice data; own data
   round-trips) → alice re-login (4 sessions intact).
+- Production E2E — UI round (deploy `a5azbokt0`, clean state): login page card light + dark →
+  credentials login (alice) → tenant form → consent → callback → 4 sessions restored from the
+  platform blob → settings: promo card absent, Account section intact → gpt-5 reply “界面正常”
+  (state PUTs 200) → logout via the standard endpoint (hint present) → clean `/login`, OP
+  session terminated, autional cookies cleared. Mid-round the platform API plane had a ~6-min
+  502 outage (nginx upstream; recovered; the consent title showed “未知应用” only during it).
 
 ## Known boundaries
 
