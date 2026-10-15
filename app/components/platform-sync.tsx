@@ -185,17 +185,8 @@ export function PlatformSync() {
       }
     });
 
-    if (!isLoading) {
-      if (isAuthenticated) {
-        void pull();
-      } else if (
-        typeof window !== "undefined" &&
-        !["/login", "/oauth/callback"].includes(window.location.pathname) &&
-        document.cookie.includes("autional_token=")
-      ) {
-        // 会话失效但残留 cookie：去登录页静默续登（SDK 刷新链缺陷兜底，见 lab C12/C13）
-        window.location.assign("/login");
-      }
+    if (!isLoading && isAuthenticated) {
+      void pull();
     }
 
     return () => {

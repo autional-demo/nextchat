@@ -1,23 +1,12 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { AUTIONAL_TOKEN_COOKIE } from "./app/autional/config";
+import { autionalMiddleware } from "@autional/next/middleware";
 
-// 本地实现（不引 @autional/next：SDK 0.3.x dist 丢失 "use client"，
-// 从 middleware 引会把 provider 的 React hooks 带进 react-server 条件编译 → 编译失败；
-// 同源缺陷见 lab AI-ONBOARDING-NOTES C7 类问题）。
-// 语义：仅做 cookie 存在性门（与 SDK 一致）；真伪由服务端逐请求 /auth/me 校验。
-export function middleware(request: NextRequest): NextResponse {
-  const { pathname } = request.nextUrl;
-  if (pathname !== "/") return NextResponse.next();
+// 2026-10-15 跟版：@autional/next 0.4.0 起 ./middleware 子路径零 react 引用且保留
+// "use client"，C7/C3N 缺陷已修，本地等价实现（cookie 存在性门）弃用。
 
-  const token = request.cookies.get(AUTIONAL_TOKEN_COOKIE)?.value;
-  if (!token) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", "/");
-    return NextResponse.redirect(loginUrl);
-  }
-  return NextResponse.next();
-}
+export const middleware = autionalMiddleware({
+  protectedPaths: ["/"],
+  loginPath: "/login",
+});
 
 export const config = {
   // 排除：API（各自做会话门）、静态资源、反代 /bff、公开页 /login /oauth、带扩展名文件。

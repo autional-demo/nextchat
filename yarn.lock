@@ -25,25 +25,25 @@
   resolved "https://registry.npmmirror.com/@autional/api-identity/-/api-identity-0.3.0.tgz#e8633186158d02d6976d5dcc87ff27c8c9ab084d"
   integrity sha512-rSnAZnbwaBSNaEDDMoFEcxOqlsnnTpM/M6qUjDYJucSV8AVFjURRcNPbnomYva5fFdtwHARnfq5MI54Sd21jcw==
 
-"@autional/core@0.3.4", "@autional/core@>=0.1.0":
-  version "0.3.4"
-  resolved "https://registry.npmmirror.com/@autional/core/-/core-0.3.4.tgz#e8e449e022902f050785cc7c13487968ebf6ef54"
-  integrity sha512-Q8mjXKpiYy7cQf1ACugJlIYc09LrvbJ95INKWfgLJ1VeBEBWc6aF/bnrFeU3nkoNBG3R0dH9z+TrRtxPP0eXMQ==
+"@autional/core@0.3.5", "@autional/core@>=0.3.5":
+  version "0.3.5"
+  resolved "https://registry.npmmirror.com/@autional/core/-/core-0.3.5.tgz#8905a90db59506f27dd1ec9f1ac2bfd673ad7f80"
+  integrity sha512-/V4vokl7NIKQx/UbgC2UKjKka7pdIC7swsU0bavYl3RvGHU7CoAHBsrVTSQHp1Ti2fIAr03ihnmsSIaTucL9cQ==
 
-"@autional/next@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.npmmirror.com/@autional/next/-/next-0.3.0.tgz#702fc5c78a5d3fc4b612ad7581d853f02a9bd40a"
-  integrity sha512-Kx+/Yqq/c9WMS9GR4sxAj0FlVW1dApksDMLEp8+wbYDXiS/to8RhtYGIhXsbxqqgQVep1JoWajT/qlT3FY9XmA==
+"@autional/next@0.4.0":
+  version "0.4.0"
+  resolved "https://registry.npmmirror.com/@autional/next/-/next-0.4.0.tgz#2f3ce4a456614291763aadeb27b6bb3a5e55d721"
+  integrity sha512-LbfykjenraBwSGLAQbKzjmnpHhyNSEgyP5/axhda9N12PGPf0SXNtDsp4naBXpZss+9/gDA/Zp4zWgaUxh1AlQ==
   dependencies:
-    "@autional/core" ">=0.1.0"
-    "@autional/react" ">=0.1.0"
+    "@autional/core" ">=0.3.5"
+    "@autional/react" ">=0.3.1"
 
-"@autional/react@0.3.0", "@autional/react@>=0.1.0":
-  version "0.3.0"
-  resolved "https://registry.npmmirror.com/@autional/react/-/react-0.3.0.tgz#a50d2746ca48aa03e478d6af3577a756f4254b39"
-  integrity sha512-ZjYM7XvQrwGv+q40uspFazbncqTH7RG/QgpkZzco9ScKNoo1orYLIv4W9eAXKOemMqqXB/7OYrUD70e9bJsMIQ==
+"@autional/react@0.3.1", "@autional/react@>=0.3.1":
+  version "0.3.1"
+  resolved "https://registry.npmmirror.com/@autional/react/-/react-0.3.1.tgz#c8a39014e98c9749596b6b21b037842c02041bd1"
+  integrity sha512-TnjsxreM/7GjzLhqr0hDULR7kYAj34rmlQ79NO4f3b/n/4LdOqFEVNhDYhSCAEnpqjpazDyiH1qsJzmD5Ia6Wg==
   dependencies:
-    "@autional/core" ">=0.1.0"
+    "@autional/core" ">=0.3.5"
 
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.18.6":
   version "7.18.6"

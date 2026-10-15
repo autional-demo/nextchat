@@ -4,7 +4,7 @@
 import { jest } from "@jest/globals";
 import { verifyAccessToken } from "../app/autional/server-auth";
 
-const fetchMock = global.fetch as jest.Mock;
+const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
 
 function okResponse(data: unknown): Response {
   return {

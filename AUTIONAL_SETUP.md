@@ -174,8 +174,8 @@ npx vercel deploy --prod --yes --archive=tgz
 
 - State snapshot cap 4MB (`MAX_STATE_BYTES`); over-limit uploads skipped, data stays local.
 - Access store (API keys) is device-local by design; logout clears it.
-- Cookie-bridged token expires with the 5-min access-token TTL; without a working SDK refresh
-  chain (novel C12/C13), pushes stall with 401 until reload re-replays SSO (observed ~10min
-  stalls; notes C5N/C6N).
+- Access token TTL is 5 min; expiry is handled by the SDK refresh chain (core 0.3.5 / next 0.4.0,
+  2026-10-15) — a reload refreshes in place, no SSO replay, pushes no longer stall
+  (C6N probe 13/13; notes C5N/C6N).
 - Desktop session-row delete is one-click (no confirm dialog, undo toast only) — upstream
   NextChat behavior; recovery via platform blob if a push already landed (notes D11N).

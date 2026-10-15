@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAutional } from "@autional/react";
 import {
@@ -41,16 +41,6 @@ export default function LoginPage() {
       setError(e instanceof Error ? e.message : String(e));
     }
   }, [loginWithOAuth]);
-
-  // 会话过期的静默续登：SDK 刷新链随 cookie 播种失效（lab C12/C13），
-  // 带残留会话 cookie 到本页时自动重走 SSO —— IdP 会话在则免点击回来。
-  const autoAttempted = useRef(false);
-  useEffect(() => {
-    if (isLoading || isAuthenticated || autoAttempted.current) return;
-    if (!document.cookie.includes("autional_token=")) return;
-    autoAttempted.current = true;
-    void handleLogin();
-  }, [isLoading, isAuthenticated, handleLogin]);
 
   const disabled = pending || isLoading;
 
